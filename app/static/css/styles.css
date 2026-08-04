@@ -160,4 +160,7 @@ body {
     font-size: 0.875rem;
     border-radius: 6px;
     padding: 0.65rem 0.875rem;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
 }
