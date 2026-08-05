@@ -1,7 +1,7 @@
 from app.database.database import Base, engine, SessionLocal
 from app.database import models
-from app.functions.auth import hash_password
-from starlette.middleware.sessions import Session
+from app.functions.auth import hash_password, verify_password
+from starlette.middleware.sessions import Session, SessionMiddleware
 from pathlib import Path
 from fastapi import FastAPI, Request, Depends, Form
 from fastapi.responses import HTMLResponse, RedirectResponse
@@ -14,7 +14,7 @@ app = FastAPI(title="Spirits Distribution Portal")
 
 BASE_DIR = Path(__file__).resolve().parent
 app.mount("/static", StaticFiles(directory=str(BASE_DIR / "static")), name="static")
-
+app.add_middleware(SessionMiddleware, secret_key="ssVWrQ[1TfjIaE;{")
 templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
 
 def get_db():
@@ -58,4 +58,24 @@ def login_page(request: Request, error: bool = False, success: bool = False):
         request=request,
         name="login.html",
         context={"error": error_message}
+    )
+
+@app.post('/login', response_class=HTMLResponse)
+def login_user(request: Request, username: str = Form(...), password: str = Form(...), db: Session = Depends(get_db)):
+    user = db.query(models.User).filter(models.User.username == username).first()
+    if not user or not verify_password(password, user.hashed_password):
+        return RedirectResponse(url="/login?error=true", status_code=303)
+    request.session["user_id"] = user.id
+    return RedirectResponse(url="/dashboard", status_code=303)
+
+@app.get('/dashboard', response_class=HTMLResponse)
+def dashboard_page(request: Request):
+    session_id=request.session.get("user_id")
+    if not session_id:
+        return RedirectResponse(url="/login")
+
+    return templates.TemplateResponse(
+        request=request,
+        name="dashboard.html",
+        context={}
     )
