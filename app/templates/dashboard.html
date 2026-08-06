@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+
+{% block title %}Orders | OrderFlow ERP{% endblock %}
+
+{% block content %}
+<!-- SECTION 1: FIXED TOP NAVIGATION BAR (Height: 65px) -->
+<header class="erp-top-nav">
+    <!-- Left: OrderFlow Logo & Application Name -->
+    <div class="erp-brand">
+        <div class="erp-logo">
+            OF
+        </div>
+        <span class="erp-app-name">OrderFlow</span>
+    </div>
+
+    <!-- Center: Current Page Title -->
+    <div class="erp-page-title-badge">
+        Orders
+    </div>
+
+    <!-- Right: Current Date, User Avatar, Username & Logout -->
+    <div class="erp-top-right">
+        <div class="erp-date">
+            📅 {{ current_date|default('2026-08-05') }}
+        </div>
+        <div class="user-profile">
+            <div class="user-avatar">
+                {{ (username|default('A'))[0]|upper }}
+            </div>
+            <span class="user-name">{{ username|default('Admin') }}</span>
+        </div>
+        <a href="/logout" class="btn-logout">Logout</a>
+    </div>
+</header>
+
+<!-- SECTION 2: FIXED LEFT SIDEBAR (Width: 240px) -->
+<aside class="erp-left-sidebar">
+    <nav>
+        <ul class="sidebar-menu">
+            <li>
+                <a href="/clients" class="menu-item">
+                    <span class="menu-icon">🏢</span>
+                    <span>Clients</span>
+                </a>
+            </li>
+            <li>
+                <a href="/beverages" class="menu-item">
+                    <span class="menu-icon">🍾</span>
+                    <span>Beverages</span>
+                </a>
+            </li>
+            <li>
+                <a href="/dashboard" class="menu-item active">
+                    <span class="menu-icon">📦</span>
+                    <span>Orders</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+</aside>
+
+<!-- SECTION 3: MAIN CONTENT AREA -->
+<main class="erp-main-canvas">
+    {% block module %}{% endblock %}
+</main>
+{% endblock %}

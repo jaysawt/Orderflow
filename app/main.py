@@ -1,7 +1,9 @@
+from datetime import date
+from sqlalchemy.orm import Session
 from app.database.database import Base, engine, SessionLocal
 from app.database import models
 from app.functions.auth import hash_password, verify_password
-from starlette.middleware.sessions import Session, SessionMiddleware
+from starlette.middleware.sessions import SessionMiddleware
 from pathlib import Path
 from fastapi import FastAPI, Request, Depends, Form
 from fastapi.responses import HTMLResponse, RedirectResponse
@@ -109,13 +111,26 @@ def forgot_password_user(
     return RedirectResponse(url="/login?reset=true", status_code=303)
 
 @app.get('/dashboard', response_class=HTMLResponse)
-def dashboard_page(request: Request):
-    session_id=request.session.get("user_id")
+def dashboard_page(request: Request, db: Session = Depends(get_db)):
+    session_id = request.session.get("user_id")
     if not session_id:
         return RedirectResponse(url="/login")
 
+    user = db.query(models.User).filter(models.User.id == session_id).first()
+    username = user.username if user else "Admin"
+    current_date_str = date.today().isoformat()
+
     return templates.TemplateResponse(
         request=request,
-        name="dashboard.html",
-        context={}
+        name="orders.html",
+        context={
+            "username": username,
+            "current_date": current_date_str,
+            "orders": []
+        }
     )
+
+@app.get('/logout')
+def logout(request: Request):
+    request.session.clear()
+    return RedirectResponse(url="/login", status_code=303)
