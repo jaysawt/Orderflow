@@ -1,0 +1,73 @@
+{% extends 'dashboard.html' %}
+
+{% block title %}{% if client %}Edit Client{% else %}Add Client{% endif %} | OrderFlow ERP{% endblock %}
+
+{% block page_title %}{% if client %}Edit Client{% else %}Add Client{% endif %}{% endblock %}
+
+{% block module %}
+<!-- Back to Clients Navigation -->
+<div class="mb-4">
+    <a href="/clients" class="btn btn-secondary-action">
+        <span>←</span> Back to Clients
+    </a>
+</div>
+
+<!-- Header Info (No Card) -->
+<div class="mb-4" style="max-width: 680px;">
+    <h4 class="fw-bold text-light mb-1">{% if client %}Edit Client Details{% else %}Add New Client{% endif %}</h4>
+    <p class="small mb-0">Enter the outlet location and registration details below.</p>
+</div>
+
+<!-- Form Layout Matching Dark ERP Background (No Card Box) -->
+<form action="/add-edit-client" method="post" style="max-width: 680px;">
+    <!-- Hidden client ID if editing -->
+    {% if client %}
+    <input type="hidden" name="client_id" value="{{ client.id }}">
+    {% endif %}
+    <!-- Outlet Name -->
+    <div class="mb-3">
+        <label for="outlet_name" class="form-label">Outlet Name <span class="text-danger">*</span></label>
+        <input 
+            type="text" 
+            class="form-control" 
+            id="outlet_name" 
+            name="outlet_name" 
+            placeholder="e.g. Royal Wines & Spirits"
+            value="{{ client.outlet_name if client else '' }}" 
+            required
+        >
+    </div>
+
+    <!-- Location -->
+    <div class="mb-3">
+        <label for="location" class="form-label">Location <span class="text-danger">*</span></label>
+        <input 
+            type="text" 
+            class="form-control" 
+            id="location" 
+            name="location" 
+            placeholder="e.g. Panaji"
+            value="{{ client.location if client else '' }}" 
+            required
+        >
+    </div>
+
+    <div class="mb-3">
+        <label for="status" class="form-label">Status <span class="text-danger">*</span></label>
+        <select name="status" id="status" class="form-select form-select-sm" style="width: 135px;">
+            <option value="1" {% if client and client.status == 1 %}selected{% endif %}>Active</option>
+            <option value="0" {% if client and client.status == 0 %}selected{% endif %}>Inactive</option>
+        </select>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="d-flex align-items-center gap-2 pt-2">
+        <button type="submit" class="btn btn-amber-action px-4">
+            <span>✓</span> {% if client %}Update Client{% else %}Save Client{% endif %}
+        </button>
+        <a href="/clients" class="btn btn-secondary-action px-3">
+            Cancel
+        </a>
+    </div>
+</form>
+{% endblock %}
