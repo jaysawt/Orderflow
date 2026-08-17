@@ -1,0 +1,84 @@
+{% extends 'dashboard.html' %}
+
+{% block title %}{% if beverage and beverage.id %}Edit beverage{% else %}Add beverage{% endif %} | OrderFlow ERP{% endblock %}
+
+{% block page_title %}{% if beverage and beverage.id %}Edit beverage{% else %}Add beverage{% endif %}{% endblock %}
+
+{% block module %}
+<div class="mb-4">
+    <a href="/beverages" class="btn btn-secondary-action">
+        <span>←</span> Back to Beverages
+    </a>
+</div>
+
+<!-- Header Info (No Card) -->
+<div class="mb-4" style="max-width: 680px;">
+    <h4 class="fw-bold text-light mb-1">{% if beverage and beverage.id %}Edit Beverage Details{% else %}Add New Beverage {% endif %}</h4>
+    <p class="small mb-0">Enter the details below for Beverage</p>
+</div>
+
+<!-- Error Alert -->
+{% if error %}
+<div class="alert alert-custom-error mb-4" style="max-width: 680px;" role="alert">
+    {{ error }}
+</div>
+{% endif %}
+
+<!-- Form Layout Matching Dark ERP Background (No Card Box) -->
+<form action="/add-edit-beverage" method="post" style="max-width: 680px;">
+    <!-- Hidden beverage ID if editing -->
+    {% if beverage and beverage.id %}
+    <input type="hidden" name="beverage_id" value="{{ beverage.id }}">
+    {% endif %}
+    <!-- Outlet Name -->
+    <div class="mb-3">
+        <label for="product_brand" class="form-label">Product Brand <span class="text-danger">*</span></label>
+        <input 
+            type="text" 
+            class="form-control" 
+            id="product_brand" 
+            name="product_brand" 
+            placeholder="e.g. Budweiser"
+            value="{{ beverage.product_brand if beverage else '' }}" 
+        >
+    </div>
+
+    <!-- Quantity -->
+    <div class="mb-3">
+        <label for="quantity" class="form-label">Quantity (ML)<span class="text-danger">*</span></label>
+        <input 
+            type="number" 
+            class="form-control" 
+            id="quantity" 
+            name="quantity" 
+            placeholder="e.g. 60"
+            value="{{ beverage.quantity if beverage else '' }}" 
+        >
+    </div>
+
+    <!-- Price -->
+    <div class="mb-3">
+        <label for="price" class="form-label">Price (MRP)<span class="text-danger">*</span></label>
+        <input 
+            type="number" 
+            class="form-control" 
+            id="price" 
+            name="price" 
+            placeholder="e.g. 50"
+            value="{{ beverage.price if beverage else '' }}" 
+        >
+    </div>
+    
+
+    <!-- Action Buttons -->
+    <div class="d-flex align-items-center gap-2 pt-2">
+        <button type="submit" class="btn btn-amber-action px-4">
+            <span>✓</span> {% if beverage and beverage.id %}Update beverage{% else %}Save beverage{% endif %}
+        </button>
+        <a href="/beverages" class="btn btn-secondary-action px-3">
+            Cancel
+        </a>
+    </div>
+</form>
+
+{% endblock %}

@@ -16,3 +16,11 @@ class Client(Base):
     outlet_name = Column(String, index=True, nullable=False)
     location = Column(String, nullable=False)
     status = Column(Integer, nullable=False, default=1, server_default='1')
+
+class Beverage(Base):
+    __tablename__ = "beverages"
+
+    id = Column(Integer, primary_key=True, index=True)
+    product_brand = Column(String, index=True, nullable=False)
+    quantity = Column(Integer, nullable=False)
+    price = Column(Integer, nullable=False)

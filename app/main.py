@@ -1,8 +1,8 @@
 from app.routers import clients
-import math
+from app.routers import auth
+from app.routers import beverages
 from datetime import date
 from sqlalchemy.orm import Session
-from app.routers import auth
 from app.database import models
 from app.dependencies import get_db, create_tables
 from starlette.middleware.sessions import SessionMiddleware
@@ -24,6 +24,7 @@ templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
 
 app.include_router(auth.router)
 app.include_router(clients.router)
+app.include_router(beverages.router)
 
 @app.get('/dashboard', response_class=HTMLResponse)
 def dashboard_page(request: Request, db: Session = Depends(get_db)):
