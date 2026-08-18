@@ -1,6 +1,7 @@
 from app.routers import clients
 from app.routers import auth
 from app.routers import beverages
+from app.routers import orders
 from datetime import date
 from sqlalchemy.orm import Session
 from app.database import models
@@ -25,23 +26,4 @@ templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
 app.include_router(auth.router)
 app.include_router(clients.router)
 app.include_router(beverages.router)
-
-@app.get('/dashboard', response_class=HTMLResponse)
-def dashboard_page(request: Request, db: Session = Depends(get_db)):
-    session_id = request.session.get("user_id")
-    if not session_id:
-        return RedirectResponse(url="/login")
-
-    user = db.query(models.User).filter(models.User.id == session_id).first()
-    username = user.username if user else "Admin"
-    current_date_str = date.today().isoformat()
-
-    return templates.TemplateResponse(
-        request=request,
-        name="orders.html",
-        context={
-            "username": username,
-            "current_date": current_date_str,
-            "orders": []
-        }
-    )
+app.include_router(orders.router)

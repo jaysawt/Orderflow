@@ -1,0 +1,408 @@
+{% extends 'dashboard.html' %}
+
+{% block title %}{% if order and order.id %}Edit Order{% else %}Add Order{% endif %} | OrderFlow ERP{% endblock %}
+
+{% block page_title %}{% if order and order.id %}Edit Order{% else %}Add Order{% endif %}{% endblock %}
+
+{% block extra_css %}
+<style>
+.searchable-dropdown-wrapper {
+    position: relative;
+    max-width: 540px;
+}
+.outlet-dropdown-menu {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    z-index: 1050;
+    max-height: 250px;
+    overflow-y: auto;
+    background-color: var(--bg-card);
+    border: 1px solid var(--border-card);
+    border-radius: 6px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+    display: none;
+    margin-top: 4px;
+}
+.outlet-dropdown-item {
+    padding: 0.65rem 0.95rem;
+    color: var(--text-primary);
+    cursor: pointer;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    transition: background-color 0.15s ease;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.outlet-dropdown-item:hover, .outlet-dropdown-item.active {
+    background-color: #332E29;
+    color: var(--accent-amber);
+}
+.outlet-dropdown-item:last-child {
+    border-bottom: none;
+}
+.no-results {
+    padding: 0.75rem 1rem;
+    color: var(--text-muted);
+    font-size: 0.875rem;
+    font-style: italic;
+}
+.order-items-wrapper {
+    max-width: 1050px;
+    animation: fadeIn 0.25s ease-in-out;
+}
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+</style>
+{% endblock %}
+
+{% block module %}
+<div class="mb-4">
+    <a href="/orders" class="btn btn-secondary-action">
+        <span>←</span> Back to Orders
+    </a>
+</div>
+
+<!-- Header Info -->
+<div class="mb-4" style="max-width: 680px;">
+    <h4 class="fw-bold text-light mb-1">{% if order and order.id %}Edit Order Details{% else %}Add New Order{% endif %}</h4>
+    <p class="small mb-0">Select an outlet to add beverages and build the order.</p>
+</div>
+
+<!-- Error Alert -->
+{% if error %}
+<div class="alert alert-custom-error mb-4" style="max-width: 680px;" role="alert">
+    {{ error }}
+</div>
+{% endif %}
+
+<form action="/add-edit-order" method="post" id="orderForm">
+    <!-- Hidden order ID if editing -->
+    {% if order and order.id %}
+    <input type="hidden" name="order_id" value="{{ order.id }}">
+    {% endif %}
+
+    <!-- 1. OUTLET NAME (Searchable Type-in Dropdown) -->
+    <div class="mb-3 searchable-dropdown-wrapper">
+        <label for="outlet_search" class="form-label">Outlet Name <span class="text-danger">*</span></label>
+        <div class="input-group">
+            <input 
+                type="text" 
+                class="form-control" 
+                id="outlet_search" 
+                placeholder="Type or click to search outlet..." 
+                autocomplete="off"
+                value="{% if order and order.outlet_name %}{{ order.outlet_name }}{% endif %}"
+                required
+            >
+            <button class="btn btn-secondary-action" type="button" id="btnToggleDropdown" title="Toggle list">
+                <span>▼</span>
+            </button>
+        </div>
+        <input type="hidden" name="outlet_id" id="outlet_id" value="{{ order.outlet_id if order else '' }}" required>
+        
+        <!-- Dropdown menu popup -->
+        <div id="outletDropdownMenu" class="outlet-dropdown-menu">
+            {% if clients %}
+                {% for client in clients %}
+                <div class="outlet-dropdown-item" 
+                     data-id="{{ client.id }}" 
+                     data-name="{{ client.outlet_name }}" 
+                     data-location="{{ client.location }}">
+                    <div>
+                        <div class="fw-bold text-light">{{ client.outlet_name }}</div>
+                        <div class="small d-flex align-items-center gap-1 mt-1">
+                            <img src="{{ url_for('static', path='/icons/location.svg') }}" alt="Location" style="width: 14px; height: 14px;">
+                            <span>{{ client.location }}</span>
+                        </div>
+                    </div>
+                    <span class="badge bg-dark text-warning border border-warning" style="font-size: 0.7rem;">Select</span>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="no-results">No active clients found. Please add a client first.</div>
+            {% endif %}
+            <div id="noMatchMessage" class="no-results" style="display: none;">No matching outlet found.</div>
+        </div>
+        <div class="form-text small" style="color: var(--text-muted);">
+            Type in the box to filter and pick an outlet from the dropdown list.
+        </div>
+    </div>
+
+    <!-- 2. ADD BUTTON BELOW CLIENT DROPDOWN -->
+    <div id="addRowContainer" class="mb-4" style="display: none;">
+        <button type="button" id="btnAddRow" class="btn btn-amber-action btn-sm">
+            <span>+</span> Add Beverage Row
+        </button>
+    </div>
+
+    <!-- 3. BEVERAGE ITEMS SECTION (Appears only after outlet is selected) -->
+    <div id="orderItemsSection" class="order-items-wrapper" style="display: none;">
+        <div class="d-flex align-items-center justify-content-between mb-3">
+            <h5 class="fw-bold text-light mb-0">Beverage Order Items</h5>
+            <span class="badge-status badge-pending">Calculations: MRP × ML × Cases × (1 - Disc%)</span>
+        </div>
+
+        <div class="table-responsive mb-4 erp-table-container">
+            <table class="table table-erp mb-0" id="itemsTable">
+                <thead>
+                    <tr>
+                        <th style="min-width: 260px;">Beverage Name <span class="text-danger">*</span></th>
+                        <th style="width: 120px;">Price (MRP) <span class="text-danger">*</span></th>
+                        <th style="width: 120px;">Quantity (ML) <span class="text-danger">*</span></th>
+                        <th style="width: 100px;">Cases <span class="text-danger">*</span></th>
+                        <th style="width: 110px;">Discount (%)</th>
+                        <th style="width: 140px;">Total Price (₹)</th>
+                        <th style="width: 60px;" class="text-center">Action</th>
+                    </tr>
+                </thead>
+                <tbody id="itemsTableBody">
+                    <!-- Dynamic Rows added here -->
+                </tbody>
+                <tfoot>
+                    <tr style="background-color: rgba(0,0,0,0.25);">
+                        <td colspan="5" class="text-end fw-bold">Grand Total:</td>
+                        <td colspan="2" class="fw-bold" style="color: var(--accent-amber); font-size: 1.1rem;" id="grandTotalDisplay">₹0.00</td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="d-flex align-items-center gap-2 pt-2 mb-4">
+            <button type="submit" class="btn btn-amber-action px-4">
+                <span>✓</span> {% if order and order.id %}Update Order{% else %}Save Order{% endif %}
+            </button>
+            <a href="/orders" class="btn btn-secondary-action px-3">
+                Cancel
+            </a>
+        </div>
+    </div>
+</form>
+
+<!-- Row Template for Cloning -->
+<template id="rowTemplate">
+    <tr class="item-row">
+        <td>
+            <select class="form-select beverage-select" name="beverage_id[]" required>
+                <option value="">-- Select Beverage --</option>
+                {% for bev in beverages %}
+                <option value="{{ bev.id }}" data-price="{{ bev.price }}" data-quantity="{{ bev.quantity }}">
+                    {{ bev.product_brand }} ({{ bev.quantity }}ml - ₹{{ bev.price }})
+                </option>
+                {% endfor %}
+            </select>
+        </td>
+        <td>
+            <input type="number" step="any" min="0" class="form-control item-price" name="price[]" placeholder="MRP" required>
+        </td>
+        <td>
+            <input type="number" step="any" min="1" class="form-control item-quantity" name="quantity[]" placeholder="ML" required>
+        </td>
+        <td>
+            <input type="number" step="1" min="1" class="form-control item-cases" name="cases[]" value="1" placeholder="Cases" required>
+        </td>
+        <td>
+            <input type="number" step="any" min="0" max="100" class="form-control item-discount" name="discount[]" value="0" placeholder="0">
+        </td>
+        <td>
+            <input type="number" step="any" class="form-control item-total" name="total_price[]" placeholder="0.00" readonly>
+        </td>
+        <td class="text-center">
+            <button type="button" class="btn btn-sm btn-outline-danger btn-remove-row" title="Remove row" style="padding: 0.25rem 0.55rem;">✕</button>
+        </td>
+    </tr>
+</template>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const outletSearch = document.getElementById('outlet_search');
+    const outletIdInput = document.getElementById('outlet_id');
+    const outletMenu = document.getElementById('outletDropdownMenu');
+    const btnToggle = document.getElementById('btnToggleDropdown');
+    const itemsSection = document.getElementById('orderItemsSection');
+    const addRowContainer = document.getElementById('addRowContainer');
+    const btnAddRow = document.getElementById('btnAddRow');
+    const itemsTableBody = document.getElementById('itemsTableBody');
+    const rowTemplate = document.getElementById('rowTemplate');
+    const grandTotalDisplay = document.getElementById('grandTotalDisplay');
+    const noMatchMessage = document.getElementById('noMatchMessage');
+    const items = outletMenu.querySelectorAll('.outlet-dropdown-item');
+
+    // Show / Hide Dropdown
+    function showMenu() {
+        outletMenu.style.display = 'block';
+    }
+    function hideMenu() {
+        setTimeout(() => { outletMenu.style.display = 'none'; }, 200);
+    }
+
+    outletSearch.addEventListener('focus', showMenu);
+    btnToggle.addEventListener('click', function(e) {
+        e.preventDefault();
+        if (outletMenu.style.display === 'block') {
+            outletMenu.style.display = 'none';
+        } else {
+            showMenu();
+            outletSearch.focus();
+        }
+    });
+
+    // Filter Dropdown items when typing
+    outletSearch.addEventListener('input', function() {
+        const query = this.value.trim().toLowerCase();
+        let matchCount = 0;
+
+        items.forEach(item => {
+            const name = (item.getAttribute('data-name') || '').toLowerCase();
+            const location = (item.getAttribute('data-location') || '').toLowerCase();
+            if (name.includes(query) || location.includes(query)) {
+                item.style.display = 'flex';
+                matchCount++;
+            } else {
+                item.style.display = 'none';
+            }
+        });
+
+        if (noMatchMessage) {
+            noMatchMessage.style.display = (matchCount === 0 && query.length > 0) ? 'block' : 'none';
+        }
+        showMenu();
+
+        // If user clears the input box, reset selection and hide items
+        if (query === '') {
+            outletIdInput.value = '';
+            checkOutletState();
+        }
+    });
+
+    // Close menu when clicking outside
+    document.addEventListener('click', function(e) {
+        if (!outletSearch.contains(e.target) && !outletMenu.contains(e.target) && !btnToggle.contains(e.target)) {
+            outletMenu.style.display = 'none';
+        }
+    });
+
+    // Outlet item selected
+    items.forEach(item => {
+        item.addEventListener('click', function() {
+            const id = this.getAttribute('data-id');
+            const name = this.getAttribute('data-name');
+            const location = this.getAttribute('data-location');
+
+            outletSearch.value = name + (location ? ` (${location})` : '');
+            outletIdInput.value = id;
+            outletMenu.style.display = 'none';
+
+            checkOutletState();
+        });
+    });
+
+    // Check if outlet is selected and toggle visibility of beverage section
+    function checkOutletState() {
+        const isSelected = !!outletIdInput.value;
+        if (isSelected) {
+            addRowContainer.style.display = 'block';
+            itemsSection.style.display = 'block';
+            // If table has no rows, add the initial first row
+            if (itemsTableBody.children.length === 0) {
+                addNewRow();
+            }
+        } else {
+            addRowContainer.style.display = 'none';
+            itemsSection.style.display = 'none';
+        }
+    }
+
+    // Function to calculate row total
+    function calculateRow(row) {
+        const price = parseFloat(row.querySelector('.item-price').value) || 0;
+        const qty = parseFloat(row.querySelector('.item-quantity').value) || 0;
+        const cases = parseFloat(row.querySelector('.item-cases').value) || 0;
+        const discount = parseFloat(row.querySelector('.item-discount').value) || 0;
+        const totalInput = row.querySelector('.item-total');
+
+        // Formula: total_price = (mrp × quantity × case) × (1 - discount / 100)
+        const subtotal = price * qty * cases;
+        const total = subtotal * (1 - (discount / 100));
+        totalInput.value = total > 0 ? total.toFixed(2) : '0.00';
+
+        calculateGrandTotal();
+    }
+
+    // Function to calculate grand total across all rows
+    function calculateGrandTotal() {
+        let grandTotal = 0;
+        document.querySelectorAll('.item-total').forEach(input => {
+            grandTotal += parseFloat(input.value) || 0;
+        });
+        grandTotalDisplay.textContent = '₹' + grandTotal.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    // Function to add a new beverage row
+    function addNewRow() {
+        const clone = rowTemplate.content.cloneNode(true);
+        const tr = clone.querySelector('tr');
+
+        // Beverage select change listener
+        const bevSelect = tr.querySelector('.beverage-select');
+        const priceInput = tr.querySelector('.item-price');
+        const qtyInput = tr.querySelector('.item-quantity');
+        const casesInput = tr.querySelector('.item-cases');
+        const discountInput = tr.querySelector('.item-discount');
+        const btnRemove = tr.querySelector('.btn-remove-row');
+
+        bevSelect.addEventListener('change', function() {
+            const selectedOption = this.options[this.selectedIndex];
+            if (selectedOption && selectedOption.value) {
+                const defaultPrice = selectedOption.getAttribute('data-price') || 0;
+                const defaultQty = selectedOption.getAttribute('data-quantity') || 0;
+                priceInput.value = defaultPrice;
+                qtyInput.value = defaultQty;
+            } else {
+                priceInput.value = '';
+                qtyInput.value = '';
+            }
+            calculateRow(tr);
+        });
+
+        // Input event listeners for real-time recalculation
+        [priceInput, qtyInput, casesInput, discountInput].forEach(inp => {
+            inp.addEventListener('input', () => calculateRow(tr));
+        });
+
+        // Remove row button
+        btnRemove.addEventListener('click', function() {
+            if (itemsTableBody.children.length > 1) {
+                tr.remove();
+                calculateGrandTotal();
+            } else {
+                // If only 1 row left, reset its fields instead of deleting
+                bevSelect.value = '';
+                priceInput.value = '';
+                qtyInput.value = '';
+                casesInput.value = '1';
+                discountInput.value = '0';
+                calculateRow(tr);
+            }
+        });
+
+        itemsTableBody.appendChild(tr);
+        return tr;
+    }
+
+    // Event listener for "+ Add Beverage Row" button
+    btnAddRow.addEventListener('click', function() {
+        const newRow = addNewRow();
+        const select = newRow.querySelector('.beverage-select');
+        if (select) select.focus();
+    });
+
+    // Check on initial page load (e.g. edit mode)
+    checkOutletState();
+});
+</script>
+{% endblock %}

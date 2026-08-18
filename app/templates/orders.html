@@ -1,0 +1,206 @@
+{% extends "dashboard.html" %}
+
+{% block title %}Orders | OrderFlow ERP{% endblock %}
+
+{% block page_title %}Orders{% endblock %}
+
+{% block module %}
+    <!-- Top Action Toolbar -->
+    <div class="toolbar-container">
+        <!-- Left Buttons -->
+        <div class="d-flex align-items-center flex-wrap gap-2">
+            <button class="btn btn-amber-action" onclick="window.location.href='/add-edit-order';">
+                <span>+</span> New Order
+            </button>
+            <button class="btn btn-secondary-action">
+                <span>📥</span> Import Distributor Excel
+            </button>
+            <button class="btn btn-secondary-action">
+                <span>📤</span> Export Excel
+            </button>
+            <button class="btn btn-secondary-action" onclick="window.location.reload();">
+                <span>🔄</span> Refresh
+            </button>
+        </div>
+
+        <!-- Right Inputs: Search, Status Filter, Date Picker -->
+        <div class="d-flex align-items-center flex-wrap gap-2">
+            <input 
+                type="text" 
+                class="form-control form-control-sm" 
+                placeholder="Search orders..." 
+                style="width: 170px;"
+            >
+
+            <select class="form-select form-select-sm" style="width: 135px;">
+                <option value="">All Statuses</option>
+                <option value="pending">Pending</option>
+                <option value="supplied">Supplied</option>
+                <option value="cancelled">Cancelled</option>
+            </select>
+
+        </div>
+    </div>
+
+    <!-- Orders Data Table Container -->
+    <div class="erp-table-container">
+        <div class="table-responsive">
+            <table class="table table-erp">
+                <thead>
+                    <tr>
+                        <th>Order Number</th>
+                        <th>Client</th>
+                        <th>Outlet</th>
+                        <th>Beverage</th>
+                        <th class="text-center">Quantity</th>
+                        <th>Order Date</th>
+                        <th>Status</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if orders %}
+                        {% for order in orders %}
+                        <tr>
+                            <td class="fw-bold text-warning">#ORD-{{ "%04d"|format(order.id) }}</td>
+                            <td>{{ order.client_name }}</td>
+                            <td>{{ order.outlet_name }}</td>
+                            <td>{{ order.beverage_name }}</td>
+                            <td class="text-center fw-bold">{{ order.quantity }} cases</td>
+                            <td>{{ order.order_date }}</td>
+                            <td>
+                                {% if order.status|lower == 'supplied' %}
+                                    <span class="badge-status badge-supplied">Supplied</span>
+                                {% elif order.status|lower == 'cancelled' %}
+                                    <span class="badge-status badge-cancelled">Cancelled</span>
+                                {% else %}
+                                    <span class="badge-status badge-pending">Pending</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-end">
+                                <a href="#" class="btn-action-icon me-1" title="View Order">👁️</a>
+                                <a href="#" class="btn-action-icon me-1" title="Edit Order">✏️</a>
+                                <a href="#" class="btn-action-icon btn-action-delete" title="Delete Order">🗑️</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                        <!-- Sample ERP Orders Dataset -->
+                        <tr>
+                            <td class="fw-bold text-warning">#ORD-1048</td>
+                            <td>Royal Wines & Spirits</td>
+                            <td>Central Outlet (Area 1)</td>
+                            <td>Royal Challenge Fine Reserve Whisky (750ml)</td>
+                            <td class="text-center fw-bold">12 cases</td>
+                            <td>2026-08-05</td>
+                            <td><span class="badge-status badge-pending">Pending</span></td>
+                            <td class="text-end">
+                                <a href="#" class="btn-action-icon me-1" title="View Order">👁️</a>
+                                <a href="#" class="btn-action-icon me-1" title="Edit Order">✏️</a>
+                                <a href="#" class="btn-action-icon btn-action-delete" title="Delete Order">🗑️</a>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="fw-bold text-warning">#ORD-1047</td>
+                            <td>Apex Hospitality & Bar</td>
+                            <td>Grand Plaza Lounge</td>
+                            <td>Johnnie Walker Black Label (1L)</td>
+                            <td class="text-center fw-bold">5 cases</td>
+                            <td>2026-08-05</td>
+                            <td><span class="badge-status badge-supplied">Supplied</span></td>
+                            <td class="text-end">
+                                <a href="#" class="btn-action-icon me-1" title="View Order">👁️</a>
+                                <a href="#" class="btn-action-icon me-1" title="Edit Order">✏️</a>
+                                <a href="#" class="btn-action-icon btn-action-delete" title="Delete Order">🗑️</a>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="fw-bold text-warning">#ORD-1046</td>
+                            <td>Highland Beverage Mart</td>
+                            <td>Westside Retail Counter</td>
+                            <td>Smirnoff Triple Distilled Vodka (750ml)</td>
+                            <td class="text-center fw-bold">20 cases</td>
+                            <td>2026-08-05</td>
+                            <td><span class="badge-status badge-pending">Pending</span></td>
+                            <td class="text-end">
+                                <a href="#" class="btn-action-icon me-1" title="View Order">👁️</a>
+                                <a href="#" class="btn-action-icon me-1" title="Edit Order">✏️</a>
+                                <a href="#" class="btn-action-icon btn-action-delete" title="Delete Order">🗑️</a>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="fw-bold text-warning">#ORD-1045</td>
+                            <td>Oceanic Resort & Pub</td>
+                            <td>Beachfront Bar & Grill</td>
+                            <td>Bacardi Superior White Rum (750ml)</td>
+                            <td class="text-center fw-bold">8 cases</td>
+                            <td>2026-08-04</td>
+                            <td><span class="badge-status badge-supplied">Supplied</span></td>
+                            <td class="text-end">
+                                <a href="#" class="btn-action-icon me-1" title="View Order">👁️</a>
+                                <a href="#" class="btn-action-icon me-1" title="Edit Order">✏️</a>
+                                <a href="#" class="btn-action-icon btn-action-delete" title="Delete Order">🗑️</a>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="fw-bold text-warning">#ORD-1044</td>
+                            <td>Starlight Fine Dining</td>
+                            <td>Downtown Main Outlet</td>
+                            <td>Glenfiddich 12 Year Old Single Malt (750ml)</td>
+                            <td class="text-center fw-bold">3 cases</td>
+                            <td>2026-08-04</td>
+                            <td><span class="badge-status badge-cancelled">Cancelled</span></td>
+                            <td class="text-end">
+                                <a href="#" class="btn-action-icon me-1" title="View Order">👁️</a>
+                                <a href="#" class="btn-action-icon me-1" title="Edit Order">✏️</a>
+                                <a href="#" class="btn-action-icon btn-action-delete" title="Delete Order">🗑️</a>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="fw-bold text-warning">#ORD-1043</td>
+                            <td>Crown Liquors Ltd</td>
+                            <td>East End Warehouse Depot</td>
+                            <td>Kingfisher Premium Lager Beer (650ml)</td>
+                            <td class="text-center fw-bold">50 cases</td>
+                            <td>2026-08-04</td>
+                            <td><span class="badge-status badge-supplied">Supplied</span></td>
+                            <td class="text-end">
+                                <a href="#" class="btn-action-icon me-1" title="View Order">👁️</a>
+                                <a href="#" class="btn-action-icon me-1" title="Edit Order">✏️</a>
+                                <a href="#" class="btn-action-icon btn-action-delete" title="Delete Order">🗑️</a>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="fw-bold text-warning">#ORD-1042</td>
+                            <td>Valley Liquor Store</td>
+                            <td>North Suburbs Outlet</td>
+                            <td>Old Monk XXX Rum (750ml)</td>
+                            <td class="text-center fw-bold">15 cases</td>
+                            <td>2026-08-03</td>
+                            <td><span class="badge-status badge-supplied">Supplied</span></td>
+                            <td class="text-end">
+                                <a href="#" class="btn-action-icon me-1" title="View Order">👁️</a>
+                                <a href="#" class="btn-action-icon me-1" title="Edit Order">✏️</a>
+                                <a href="#" class="btn-action-icon btn-action-delete" title="Delete Order">🗑️</a>
+                            </td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination Bar -->
+        <div class="erp-table-footer">
+            <div>
+                Showing <span class="fw-bold text-light">1</span> to <span class="fw-bold text-light">7</span> of <span class="fw-bold text-light">48</span> orders
+            </div>
+            <div class="d-flex align-items-center gap-1">
+                <button class="btn btn-secondary-action btn-sm disabled">Previous</button>
+                <button class="btn btn-amber-action btn-sm">1</button>
+                <button class="btn btn-secondary-action btn-sm">2</button>
+                <button class="btn btn-secondary-action btn-sm">3</button>
+                <button class="btn btn-secondary-action btn-sm">Next</button>
+            </div>
+        </div>
+    </div>
+{% endblock %}
