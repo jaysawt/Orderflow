@@ -53,7 +53,7 @@ def login_user(request: Request, username: str = Form(...), password: str = Form
     if not user or not verify_password(password, user.hashed_password):
         return RedirectResponse(url="/login?error=true", status_code=303)
     request.session["user_id"] = user.id
-    return RedirectResponse(url="/dashboard", status_code=303)
+    return RedirectResponse(url="/orders", status_code=303)
 
 @router.get('/logout')
 def logout(request: Request):
