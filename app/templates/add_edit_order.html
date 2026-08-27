@@ -5,58 +5,58 @@
 {% block page_title %}{% if order and order.id %}Edit Order{% else %}Add Order{% endif %}{% endblock %}
 
 {% block extra_css %}
-<style>
-.searchable-dropdown-wrapper {
-    position: relative;
-    max-width: 540px;
-}
-.outlet-dropdown-menu {
-    position: absolute;
-    top: 100%;
-    left: 0;
-    right: 0;
-    z-index: 1050;
-    max-height: 250px;
-    overflow-y: auto;
-    background-color: var(--bg-card);
-    border: 1px solid var(--border-card);
-    border-radius: 6px;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
-    display: none;
-    margin-top: 4px;
-}
-.outlet-dropdown-item {
-    padding: 0.65rem 0.95rem;
-    color: var(--text-primary);
-    cursor: pointer;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-    transition: background-color 0.15s ease;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-.outlet-dropdown-item:hover, .outlet-dropdown-item.active {
-    background-color: #332E29;
-    color: var(--accent-amber);
-}
-.outlet-dropdown-item:last-child {
-    border-bottom: none;
-}
-.no-results {
-    padding: 0.75rem 1rem;
-    color: var(--text-muted);
-    font-size: 0.875rem;
-    font-style: italic;
-}
-.order-items-wrapper {
-    max-width: 1050px;
-    animation: fadeIn 0.25s ease-in-out;
-}
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(6px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-</style>
+    <style>
+        .searchable-dropdown-wrapper {
+            position: relative;
+            max-width: 540px;
+        }
+        .outlet-dropdown-menu {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            z-index: 1050;
+            max-height: 250px;
+            overflow-y: auto;
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-card);
+            border-radius: 6px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+            display: none;
+            margin-top: 4px;
+        }
+        .outlet-dropdown-item {
+            padding: 0.65rem 0.95rem;
+            color: var(--text-primary);
+            cursor: pointer;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            transition: background-color 0.15s ease;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .outlet-dropdown-item:hover, .outlet-dropdown-item.active {
+            background-color: #332E29;
+            color: var(--accent-amber);
+        }
+        .outlet-dropdown-item:last-child {
+            border-bottom: none;
+        }
+        .no-results {
+            padding: 0.75rem 1rem;
+            color: var(--text-muted);
+            font-size: 0.875rem;
+            font-style: italic;
+        }
+        .order-items-wrapper {
+            max-width: 1050px;
+            animation: fadeIn 0.25s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
 {% endblock %}
 
 {% block module %}
@@ -86,49 +86,59 @@
     {% endif %}
 
     <!-- 1. OUTLET NAME (Searchable Type-in Dropdown) -->
-    <div class="mb-3 searchable-dropdown-wrapper">
-        <label for="outlet_search" class="form-label">Outlet Name <span class="text-danger">*</span></label>
-        <div class="input-group">
-            <input 
-                type="text" 
-                class="form-control" 
-                id="outlet_search" 
-                placeholder="Type or click to search outlet..." 
-                autocomplete="off"
-                value="{% if order and order.outlet_name %}{{ order.outlet_name }}{% endif %}"
-                required
-            >
-            <button class="btn btn-secondary-action" type="button" id="btnToggleDropdown" title="Toggle list">
-                <span>▼</span>
-            </button>
-        </div>
-        <input type="hidden" name="outlet_id" id="outlet_id" value="{{ order.outlet_id if order else '' }}" required>
+    <div style="display:flex; flex-direction: space-between; justify-content: space-between;">
+        <div class="mb-3 searchable-dropdown-wrapper">
+            <label for="outlet_search" class="form-label">Outlet Name <span class="text-danger">*</span></label>
+            <div class="input-group">
+                <input 
+                    type="text" 
+                    class="form-control" 
+                    id="outlet_search" 
+                    placeholder="Type or click to search outlet..." 
+                    autocomplete="off"
+                    value="{% if order and order.client.outlet_name %}{{ order.client.outlet_name }}{% endif %}"
+                    required
+                >
+                <button class="btn btn-secondary-action" type="button" id="btnToggleDropdown" title="Toggle list">
+                    <span>▼</span>
+                </button>
+            </div>
+            <input type="hidden" name="client_id" id="client_id" value="{{ order.client_id if order else '' }}" required>
+            <input type="hidden" name="grand_total" id="grand_total" value="{{ order.grand_total if order else '' }}" required>
         
-        <!-- Dropdown menu popup -->
-        <div id="outletDropdownMenu" class="outlet-dropdown-menu">
-            {% if clients %}
-                {% for client in clients %}
-                <div class="outlet-dropdown-item" 
-                     data-id="{{ client.id }}" 
-                     data-name="{{ client.outlet_name }}" 
-                     data-location="{{ client.location }}">
-                    <div>
-                        <div class="fw-bold text-light">{{ client.outlet_name }}</div>
-                        <div class="small d-flex align-items-center gap-1 mt-1">
-                            <img src="{{ url_for('static', path='/icons/location.svg') }}" alt="Location" style="width: 14px; height: 14px;">
-                            <span>{{ client.location }}</span>
+            <!-- Dropdown menu popup -->
+            <div id="outletDropdownMenu" class="outlet-dropdown-menu">
+                {% if clients %}
+                    {% for client in clients %}
+                    <div class="outlet-dropdown-item" 
+                        data-id="{{ client.id }}" 
+                        data-name="{{ client.outlet_name }}" 
+                        data-location="{{ client.location }}">
+                        <div>
+                            <div class="fw-bold text-light">{{ client.outlet_name }}</div>
+                            <div class="small d-flex align-items-center gap-1 mt-1">
+                                <img src="{{ url_for('static', path='/icons/location.svg') }}" alt="Location" style="width: 14px; height: 14px;">
+                                <span>{{ client.location }}</span>
+                            </div>
                         </div>
+                        <span class="badge bg-dark text-warning border border-warning" style="font-size: 0.7rem;">Select</span>
                     </div>
-                    <span class="badge bg-dark text-warning border border-warning" style="font-size: 0.7rem;">Select</span>
-                </div>
-                {% endfor %}
-            {% else %}
-                <div class="no-results">No active clients found. Please add a client first.</div>
-            {% endif %}
-            <div id="noMatchMessage" class="no-results" style="display: none;">No matching outlet found.</div>
+                    {% endfor %}
+                {% else %}
+                    <div class="no-results">No active clients found. Please add a client first.</div>
+                {% endif %}
+                <div id="noMatchMessage" class="no-results" style="display: none;">No matching outlet found.</div>
+            </div>
+            <div class="form-text small" style="color: var(--text-muted);">
+                Type in the box to filter and pick an outlet from the dropdown list.
+            </div>
         </div>
-        <div class="form-text small" style="color: var(--text-muted);">
-            Type in the box to filter and pick an outlet from the dropdown list.
+        <div class="mb-3" style="margin-right: 500px;">
+            <label for="status" class="form-label">Status <span class="text-danger">*</span></label>
+            <select name="status" id="status" class="form-select form-select-sm" style="width: 135px;">
+                <option value="0" {% if order and order.status == 0 %}selected{% endif %}>Pending</option>
+                <option value="1" {% if order and order.status == 1 %}selected{% endif %}>Delivered</option>
+            </select>
         </div>
     </div>
 
@@ -160,7 +170,40 @@
                     </tr>
                 </thead>
                 <tbody id="itemsTableBody">
-                    <!-- Dynamic Rows added here -->
+                    {% if order and order.items %}
+                        {% for item in order.items %}
+                        <tr class="item-row">
+                            <td>
+                                <select class="form-select beverage-select" name="beverage_id[]" required>
+                                    <option value="">-- Select Beverage --</option>
+                                    {% for bev in beverages %}
+                                    <option value="{{ bev.id }}" data-price="{{ bev.price }}" data-quantity="{{ bev.quantity }}" {% if bev.id == item.beverage_id %}selected{% endif %}>
+                                        {{ bev.product_brand }} ({{ bev.quantity }}ml - ₹{{ bev.price }})
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </td>
+                            <td>
+                                <input type="number" step="any" min="0" class="form-control item-price" name="price[]" value="{{ item.mrp }}" placeholder="MRP" required>
+                            </td>
+                            <td>
+                                <input type="number" step="any" min="1" class="form-control item-quantity" name="quantity[]" value="{{ item.quantity }}" placeholder="ML" required>
+                            </td>
+                            <td>
+                                <input type="number" step="1" min="1" class="form-control item-cases" name="cases[]" value="{{ item.cases }}" placeholder="Cases" required>
+                            </td>
+                            <td>
+                                <input type="number" step="any" min="0" max="100" class="form-control item-discount" name="discount[]" value="{{ item.discount or 0 }}" placeholder="0">
+                            </td>
+                            <td>
+                                <input type="number" step="any" class="form-control item-total" name="total_price[]" value="{{ item.total_price }}" placeholder="0.00" readonly>
+                            </td>
+                            <td class="text-center">
+                                <button type="button" class="btn btn-sm btn-outline-danger btn-remove-row" title="Remove row" style="padding: 0.25rem 0.55rem;">✕</button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    {% endif %}
                 </tbody>
                 <tfoot>
                     <tr style="background-color: rgba(0,0,0,0.25);">
@@ -220,7 +263,7 @@
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const outletSearch = document.getElementById('outlet_search');
-    const outletIdInput = document.getElementById('outlet_id');
+    const clientIdInput = document.getElementById('client_id');
     const outletMenu = document.getElementById('outletDropdownMenu');
     const btnToggle = document.getElementById('btnToggleDropdown');
     const itemsSection = document.getElementById('orderItemsSection');
@@ -229,6 +272,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const itemsTableBody = document.getElementById('itemsTableBody');
     const rowTemplate = document.getElementById('rowTemplate');
     const grandTotalDisplay = document.getElementById('grandTotalDisplay');
+    const grandTotal = document.getElementById('grand_total');
     const noMatchMessage = document.getElementById('noMatchMessage');
     const items = outletMenu.querySelectorAll('.outlet-dropdown-item');
 
@@ -274,7 +318,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // If user clears the input box, reset selection and hide items
         if (query === '') {
-            outletIdInput.value = '';
+            clientIdInput.value = '';
             checkOutletState();
         }
     });
@@ -294,7 +338,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const location = this.getAttribute('data-location');
 
             outletSearch.value = name + (location ? ` (${location})` : '');
-            outletIdInput.value = id;
+            clientIdInput.value = id;
             outletMenu.style.display = 'none';
 
             checkOutletState();
@@ -303,7 +347,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Check if outlet is selected and toggle visibility of beverage section
     function checkOutletState() {
-        const isSelected = !!outletIdInput.value;
+        const isSelected = !!clientIdInput.value;
         if (isSelected) {
             addRowContainer.style.display = 'block';
             itemsSection.style.display = 'block';
@@ -340,14 +384,12 @@ document.addEventListener('DOMContentLoaded', function() {
             grandTotal += parseFloat(input.value) || 0;
         });
         grandTotalDisplay.textContent = '₹' + grandTotal.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        const grandTotalInput = document.getElementById('grand_total');
+        if (grandTotalInput) grandTotalInput.value = grandTotal.toFixed(2);
     }
 
-    // Function to add a new beverage row
-    function addNewRow() {
-        const clone = rowTemplate.content.cloneNode(true);
-        const tr = clone.querySelector('tr');
-
-        // Beverage select change listener
+    // Function to bind event listeners to a row
+    function bindRowEvents(tr) {
         const bevSelect = tr.querySelector('.beverage-select');
         const priceInput = tr.querySelector('.item-price');
         const qtyInput = tr.querySelector('.item-quantity');
@@ -389,7 +431,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 calculateRow(tr);
             }
         });
+    }
 
+    // Function to add a new beverage row
+    function addNewRow() {
+        const clone = rowTemplate.content.cloneNode(true);
+        const tr = clone.querySelector('tr');
+        bindRowEvents(tr);
         itemsTableBody.appendChild(tr);
         return tr;
     }
@@ -401,8 +449,14 @@ document.addEventListener('DOMContentLoaded', function() {
         if (select) select.focus();
     });
 
+    // Bind events to pre-rendered rows (in Edit mode)
+    document.querySelectorAll('#itemsTableBody .item-row').forEach(tr => {
+        bindRowEvents(tr);
+    });
+
     // Check on initial page load (e.g. edit mode)
     checkOutletState();
+    calculateGrandTotal();
 });
 </script>
 {% endblock %}

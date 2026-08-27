@@ -457,7 +457,6 @@ body {
 .btn-action-icon {
     background: transparent;
     border: 1px solid var(--border-input);
-    color: var(--text-muted);
     padding: 0.3rem 0.55rem;
     border-radius: 6px;
     font-size: 0.8rem;
@@ -474,6 +473,18 @@ body {
     display: inline-block;
     vertical-align: middle;
     transition: filter 0.15s ease-in-out;
+}
+
+.btn-icon-svg {
+    width: 16px;
+    height: 16px;
+    display: inline-block;
+    vertical-align: middle;
+    transition: filter 0.15s ease-in-out;
+}
+
+.btn-secondary-action:hover .btn-icon-svg {
+    filter: brightness(0) saturate(100%) invert(64%) sepia(43%) saturate(738%) hue-rotate(356deg) brightness(89%) contrast(87%);
 }
 
 .btn-action-icon:hover {

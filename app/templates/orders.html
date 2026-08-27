@@ -12,179 +12,101 @@
             <button class="btn btn-amber-action" onclick="window.location.href='/add-edit-order';">
                 <span>+</span> New Order
             </button>
-            <button class="btn btn-secondary-action">
-                <span>📥</span> Import Distributor Excel
-            </button>
-            <button class="btn btn-secondary-action">
-                <span>📤</span> Export Excel
-            </button>
             <button class="btn btn-secondary-action" onclick="window.location.reload();">
-                <span>🔄</span> Refresh
+                <img src="{{ url_for('static', path='/icons/refresh.svg') }}" alt="Refresh" class="btn-icon-svg"> Check order duplicates
             </button>
         </div>
 
         <!-- Right Inputs: Search, Status Filter, Date Picker -->
         <div class="d-flex align-items-center flex-wrap gap-2">
             <input 
-                type="text" 
+                type="text"
+                id="searchInput"
                 class="form-control form-control-sm" 
                 placeholder="Search orders..." 
                 style="width: 170px;"
+                value="{{ search }}"
+                onkeydown="if(event.key === 'Enter'){ updateFilters(); }"
+                onblur="updateFilters()"
             >
 
-            <select class="form-select form-select-sm" style="width: 135px;">
+            <select id="statusFilter" class="form-select form-select-sm" style="width: 135px;" onchange="updateFilters()">
                 <option value="">All Statuses</option>
-                <option value="pending">Pending</option>
-                <option value="supplied">Supplied</option>
-                <option value="cancelled">Cancelled</option>
+                <option value="0"{% if status == '0' %}selected{% endif %}>Pending</option>
+                <option value="1"{% if status == '1' %}selected{% endif %}>Delivered</option>
             </select>
 
         </div>
     </div>
 
+    {% if order_saved %}
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        Order created successfully!
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    {% elif order_delete %}
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        Order deleted successfully!
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    {% elif order_edit %}
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        Order updated successfully!
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    {% endif %}
+
+{% if orders %}
     <!-- Orders Data Table Container -->
     <div class="erp-table-container">
         <div class="table-responsive">
             <table class="table table-erp">
                 <thead>
                     <tr>
+                        <th>Sr. no.</th>
                         <th>Order Number</th>
                         <th>Client</th>
-                        <th>Outlet</th>
-                        <th>Beverage</th>
-                        <th class="text-center">Quantity</th>
-                        <th>Order Date</th>
+                        <th>Grand Total</th>
                         <th>Status</th>
-                        <th class="text-end">Actions</th>
+                        <th>Order Date</th>
+                        <th class="text-center">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
-                    {% if orders %}
-                        {% for order in orders %}
-                        <tr>
-                            <td class="fw-bold text-warning">#ORD-{{ "%04d"|format(order.id) }}</td>
-                            <td>{{ order.client_name }}</td>
-                            <td>{{ order.outlet_name }}</td>
-                            <td>{{ order.beverage_name }}</td>
-                            <td class="text-center fw-bold">{{ order.quantity }} cases</td>
-                            <td>{{ order.order_date }}</td>
-                            <td>
-                                {% if order.status|lower == 'supplied' %}
-                                    <span class="badge-status badge-supplied">Supplied</span>
-                                {% elif order.status|lower == 'cancelled' %}
-                                    <span class="badge-status badge-cancelled">Cancelled</span>
-                                {% else %}
-                                    <span class="badge-status badge-pending">Pending</span>
-                                {% endif %}
-                            </td>
-                            <td class="text-end">
-                                <a href="#" class="btn-action-icon me-1" title="View Order">👁️</a>
-                                <a href="#" class="btn-action-icon me-1" title="Edit Order">✏️</a>
-                                <a href="#" class="btn-action-icon btn-action-delete" title="Delete Order">🗑️</a>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    {% else %}
-                        <!-- Sample ERP Orders Dataset -->
-                        <tr>
-                            <td class="fw-bold text-warning">#ORD-1048</td>
-                            <td>Royal Wines & Spirits</td>
-                            <td>Central Outlet (Area 1)</td>
-                            <td>Royal Challenge Fine Reserve Whisky (750ml)</td>
-                            <td class="text-center fw-bold">12 cases</td>
-                            <td>2026-08-05</td>
-                            <td><span class="badge-status badge-pending">Pending</span></td>
-                            <td class="text-end">
-                                <a href="#" class="btn-action-icon me-1" title="View Order">👁️</a>
-                                <a href="#" class="btn-action-icon me-1" title="Edit Order">✏️</a>
-                                <a href="#" class="btn-action-icon btn-action-delete" title="Delete Order">🗑️</a>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td class="fw-bold text-warning">#ORD-1047</td>
-                            <td>Apex Hospitality & Bar</td>
-                            <td>Grand Plaza Lounge</td>
-                            <td>Johnnie Walker Black Label (1L)</td>
-                            <td class="text-center fw-bold">5 cases</td>
-                            <td>2026-08-05</td>
-                            <td><span class="badge-status badge-supplied">Supplied</span></td>
-                            <td class="text-end">
-                                <a href="#" class="btn-action-icon me-1" title="View Order">👁️</a>
-                                <a href="#" class="btn-action-icon me-1" title="Edit Order">✏️</a>
-                                <a href="#" class="btn-action-icon btn-action-delete" title="Delete Order">🗑️</a>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td class="fw-bold text-warning">#ORD-1046</td>
-                            <td>Highland Beverage Mart</td>
-                            <td>Westside Retail Counter</td>
-                            <td>Smirnoff Triple Distilled Vodka (750ml)</td>
-                            <td class="text-center fw-bold">20 cases</td>
-                            <td>2026-08-05</td>
-                            <td><span class="badge-status badge-pending">Pending</span></td>
-                            <td class="text-end">
-                                <a href="#" class="btn-action-icon me-1" title="View Order">👁️</a>
-                                <a href="#" class="btn-action-icon me-1" title="Edit Order">✏️</a>
-                                <a href="#" class="btn-action-icon btn-action-delete" title="Delete Order">🗑️</a>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td class="fw-bold text-warning">#ORD-1045</td>
-                            <td>Oceanic Resort & Pub</td>
-                            <td>Beachfront Bar & Grill</td>
-                            <td>Bacardi Superior White Rum (750ml)</td>
-                            <td class="text-center fw-bold">8 cases</td>
-                            <td>2026-08-04</td>
-                            <td><span class="badge-status badge-supplied">Supplied</span></td>
-                            <td class="text-end">
-                                <a href="#" class="btn-action-icon me-1" title="View Order">👁️</a>
-                                <a href="#" class="btn-action-icon me-1" title="Edit Order">✏️</a>
-                                <a href="#" class="btn-action-icon btn-action-delete" title="Delete Order">🗑️</a>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td class="fw-bold text-warning">#ORD-1044</td>
-                            <td>Starlight Fine Dining</td>
-                            <td>Downtown Main Outlet</td>
-                            <td>Glenfiddich 12 Year Old Single Malt (750ml)</td>
-                            <td class="text-center fw-bold">3 cases</td>
-                            <td>2026-08-04</td>
-                            <td><span class="badge-status badge-cancelled">Cancelled</span></td>
-                            <td class="text-end">
-                                <a href="#" class="btn-action-icon me-1" title="View Order">👁️</a>
-                                <a href="#" class="btn-action-icon me-1" title="Edit Order">✏️</a>
-                                <a href="#" class="btn-action-icon btn-action-delete" title="Delete Order">🗑️</a>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td class="fw-bold text-warning">#ORD-1043</td>
-                            <td>Crown Liquors Ltd</td>
-                            <td>East End Warehouse Depot</td>
-                            <td>Kingfisher Premium Lager Beer (650ml)</td>
-                            <td class="text-center fw-bold">50 cases</td>
-                            <td>2026-08-04</td>
-                            <td><span class="badge-status badge-supplied">Supplied</span></td>
-                            <td class="text-end">
-                                <a href="#" class="btn-action-icon me-1" title="View Order">👁️</a>
-                                <a href="#" class="btn-action-icon me-1" title="Edit Order">✏️</a>
-                                <a href="#" class="btn-action-icon btn-action-delete" title="Delete Order">🗑️</a>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td class="fw-bold text-warning">#ORD-1042</td>
-                            <td>Valley Liquor Store</td>
-                            <td>North Suburbs Outlet</td>
-                            <td>Old Monk XXX Rum (750ml)</td>
-                            <td class="text-center fw-bold">15 cases</td>
-                            <td>2026-08-03</td>
-                            <td><span class="badge-status badge-supplied">Supplied</span></td>
-                            <td class="text-end">
-                                <a href="#" class="btn-action-icon me-1" title="View Order">👁️</a>
-                                <a href="#" class="btn-action-icon me-1" title="Edit Order">✏️</a>
-                                <a href="#" class="btn-action-icon btn-action-delete" title="Delete Order">🗑️</a>
-                            </td>
-                        </tr>
-                    {% endif %}
+                    {% for order in orders %}
+                    <tr>
+                        <td>{{ (page - 1) * page_size + loop.index }}</td>
+                        <td class="fw-bold text-warning">{{ order.order_name }}</td>
+                        <td>{{ order.client.outlet_name }}</td>
+                        <td>{{ order.grand_total }}</td>
+                        <td>
+                            {% if order.status == 0 %}
+                                <span class="badge-status badge-cancelled">Pending</span>
+                            {% elif order.status == 1 %}
+                                <span class="badge-status badge-supplied">Delivered</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ order.created_at.strftime('%d %b %Y') }}</td>
+                        <td class="text-end">
+                            <a href="/export-order?order_id={{ order.id }}" class="btn-action-icon me-1" title="Export Order">
+                                <img src="{{ url_for('static', path='/icons/export.svg') }}" alt="Export" class="btn-icon-svg"> Export Excel
+                            </a>
+                            <a href="/import-distributor-excel?order_id={{ order.id }}" class="btn-action-icon me-1" title="Import Distributor Excel">
+                                <img src="{{ url_for('static', path='/icons/import.svg') }}" alt="Import" class="btn-icon-svg"> Import Distributor Excel
+                            </a>
+                            <a href="/add-edit-order?order_id={{ order.id }}" class="btn-action-icon me-1" title="Edit Order">
+                                <img src="{{ url_for('static', path='/icons/edit.svg') }}" alt="Edit" class="action-icon-svg">
+                            </a>
+                            <form action="/delete-order" method="post" style="display:inline;" 
+                                onsubmit="return confirm('Are you sure you want to delete {{ order.order_name }}?');">
+                                <input type="hidden" name="order_id" value="{{ order.id }}">
+                                <button type="submit" class="btn-action-icon btn-action-delete" title="Delete Order" style="border:none; background:none; padding:0;">
+                                    <img src="{{ url_for('static', path='/icons/trash.svg') }}" alt="Delete" class="action-icon-svg">
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
                 </tbody>
             </table>
         </div>
@@ -192,15 +114,54 @@
         <!-- Pagination Bar -->
         <div class="erp-table-footer">
             <div>
-                Showing <span class="fw-bold text-light">1</span> to <span class="fw-bold text-light">7</span> of <span class="fw-bold text-light">48</span> orders
+                Showing <span class="fw-bold text-light">{{ start_index }}</span> to <span class="fw-bold text-light">{{ end_index }}</span> of <span class="fw-bold text-light">{{ total_orders }}</span> orders
             </div>
             <div class="d-flex align-items-center gap-1">
-                <button class="btn btn-secondary-action btn-sm disabled">Previous</button>
-                <button class="btn btn-amber-action btn-sm">1</button>
-                <button class="btn btn-secondary-action btn-sm">2</button>
-                <button class="btn btn-secondary-action btn-sm">3</button>
-                <button class="btn btn-secondary-action btn-sm">Next</button>
+                {% set filter_params = ('&status=' ~ status if status is not none else '') ~ ('&search=' ~ search if search else '') %}
+
+                {% if page > 1 %}
+                    <a href="/orders?page={{ page - 1 }}{{ filter_params }}" class="btn btn-secondary-action btn-sm">Previous</a>
+                {% else %}
+                    <button class="btn btn-secondary-action btn-sm disabled" disabled>Previous</button>
+                {% endif %}
+
+                {% for p in range(1, total_pages + 1) %}
+                    {% if p == page %}
+                        <button class="btn btn-amber-action btn-sm" disabled>{{ p }}</button>
+                    {% else %}
+                        <a href="/orders?page={{ p }}{{ filter_params }}" class="btn btn-secondary-action btn-sm">{{ p }}</a>
+                    {% endif %}
+                {% endfor %}
+
+                {% if page < total_pages %}
+                    <a href="/orders?page={{ page + 1 }}{{ filter_params }}" class="btn btn-secondary-action btn-sm">Next</a>
+                {% else %}
+                    <button class="btn btn-secondary-action btn-sm disabled" disabled>Next</button>
+                {% endif %}
             </div>
         </div>
     </div>
+{% else %}
+    <div class="erp-table-container text-center py-4">
+        {% if search or status %}
+            No Orders found matching your search or filters.
+        {% else %}
+            No Order added please add order.
+        {% endif %}
+    </div>
+{% endif %}
+
+<script>
+    function updateFilters() {
+        const searchVal = document.getElementById('searchInput').value.trim();
+        const statusVal = document.getElementById('statusFilter').value;
+        const params = new URLSearchParams();
+
+        if (searchVal) params.set('search', searchVal);
+        if (statusVal !== '') params.set('status', statusVal);
+
+        const queryString = params.toString();
+        window.location.href = '/orders' + (queryString ? '?' + queryString : '');
+    }
+</script>
 {% endblock %}
