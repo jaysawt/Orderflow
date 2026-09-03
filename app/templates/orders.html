@@ -5,6 +5,11 @@
 {% block page_title %}Orders{% endblock %}
 
 {% block module %}
+    <!-- Hidden Excel Import Form -->
+    <form id="importExcelForm" action="/import-order" method="post" enctype="multipart/form-data" style="display: none;">
+        <input type="file" id="importFileInput" name="file" accept=".xlsx, .xls" onchange="document.getElementById('importExcelForm').submit();">
+    </form>
+
     <!-- Top Action Toolbar -->
     <div class="toolbar-container">
         <!-- Left Buttons -->
@@ -54,6 +59,16 @@
         Order updated successfully!
         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     </div>
+    {% elif export_error %}
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        {{ export_error }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    {% elif import_error %}
+    <div class="alert alert-info alert-dismissible fade show" role="alert">
+        {{ import_error }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
     {% endif %}
 
 {% if orders %}
@@ -88,12 +103,12 @@
                         </td>
                         <td>{{ order.created_at.strftime('%d %b %Y') }}</td>
                         <td class="text-end">
-                            <a href="/export-order?order_id={{ order.id }}" class="btn-action-icon me-1" title="Export Order">
+                            <a href="/export-order?order_id={{ order.id }}" class="btn-action-icon me-1" title="Export Order" style="color:black">
                                 <img src="{{ url_for('static', path='/icons/export.svg') }}" alt="Export" class="btn-icon-svg"> Export Excel
                             </a>
-                            <a href="/import-distributor-excel?order_id={{ order.id }}" class="btn-action-icon me-1" title="Import Distributor Excel">
+                            <button type="button" class="btn-action-icon me-1" title="Import Distributor Excel" onclick="document.getElementById('importFileInput').click();">
                                 <img src="{{ url_for('static', path='/icons/import.svg') }}" alt="Import" class="btn-icon-svg"> Import Distributor Excel
-                            </a>
+                            </button>
                             <a href="/add-edit-order?order_id={{ order.id }}" class="btn-action-icon me-1" title="Edit Order">
                                 <img src="{{ url_for('static', path='/icons/edit.svg') }}" alt="Edit" class="action-icon-svg">
                             </a>

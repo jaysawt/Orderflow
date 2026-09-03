@@ -1,10 +1,11 @@
 import math
 from datetime import date
 from typing import Optional, List
-from fastapi import APIRouter, Depends, Form, Query, Request
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi import APIRouter, Depends, File, Form, Query, Request, UploadFile
+from fastapi.responses import HTMLResponse, RedirectResponse, StreamingResponse
 from sqlalchemy.orm import Session
 from app.dependencies import get_db, get_current_user, templates
+from app.excelsheet import build_orders_excel, decode_orders_excel
 from app.database import models
 from app.validation import OrderForm, OrderItemForm
 from pydantic import ValidationError
@@ -26,6 +27,7 @@ def orders_page(
     order_saved: bool = False,
     order_delete: bool = False,
     order_edit: bool = False,
+    import_error: Optional[str] = Query(None),
     status: Optional[str] = Query(None),
     search: Optional[str] = Query(None),
 ):
@@ -77,6 +79,7 @@ def orders_page(
             "order_saved": order_saved_msg,
             "order_delete": order_delete_msg,
             "order_edit": order_edit_msg,
+            "import_error": import_error,
             "orders": orders,
             "page": page,
             "total_pages": total_pages,
@@ -229,3 +232,36 @@ def delete_order(
         else:
             return RedirectResponse(url='/orders')
 
+@router.get('/export-order', response_class=HTMLResponse)
+def export_order(
+    db: Session = Depends(get_db),
+    user: models.User = Depends(get_current_user),
+    order_id: Optional[int] = Query(None),
+):
+    if order_id:
+        orders = db.query(models.Order).filter(models.Order.id == order_id).all()
+
+    if not orders:
+        return RedirectResponse(url="/orders?export_error=No+orders+to+export", status_code=303)
+
+    buffer = build_orders_excel(orders)
+    filename = f"{orders[0].order_name}.xlsx"
+
+    return StreamingResponse(
+        buffer,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": f"attachment; filename={filename}"}
+    )
+
+@router.post('/import-order', response_class=HTMLResponse)
+def import_order(
+    db: Session = Depends(get_db),
+    user: models.User = Depends(get_current_user),
+    file: UploadFile = File(...),
+):
+    if not file or not file.filename:
+        return RedirectResponse(url="/orders?import_error=No+file+provided", status_code=303)
+    
+    msg = decode_orders_excel(file, db)
+    return RedirectResponse(url=f"/orders?import_error={msg}", status_code=303)
+        

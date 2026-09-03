@@ -21,7 +21,6 @@ app = FastAPI(title="Spirits Distribution Portal")
 BASE_DIR = Path(__file__).resolve().parent
 app.mount("/static", StaticFiles(directory=str(BASE_DIR / "static")), name="static")
 app.add_middleware(SessionMiddleware, secret_key="ssVWrQ[1TfjIaE;{")
-templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
 
 app.include_router(auth.router)
 app.include_router(clients.router)
